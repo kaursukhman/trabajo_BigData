@@ -1,0 +1,61 @@
+project:
+  type: website
+  output-dir: docs   #- carpeta donde se generará el blog
+
+#- 2/ Opciones referentes a la estructura de la web -----------------
+
+website:
+  title: "ANÁLISIS DE LOS ORÍGENES DEL ATRASO Y TRAYECTORIA ECONÓMICA POSTERIOR: INDIA"
+  navbar:
+    logo: "flag.png"
+    background: "#c98657" 
+    foreground: "beige"
+    right:
+      - text: "Trabajo Individual"
+        href: blog.qmd
+      - icon: github
+        href: https://github.com/<kaursukhman>
+      - icon: twitter
+        href: https://twitter.com/<tu-usuario twitter>
+      - icon: envelope
+        url: "mailto:<kaursukh@alumni.uv.es>"
+  page-footer:
+    border: true
+    background: "#c98657"         #--
+    left: "© 2022 Sukhman"   #--
+    center: "Hecho con [Quarto](https://quarto.org)"
+    right:
+      - icon: github
+        href: https://github.com/kaursukhman 
+      - icon: twitter
+        href: https://twitter.com/<tu-usuario-twitter>  #-----
+      - icon: envelope
+        url: "mailto:<tu-mail>@alumni.uv.es" 
+ 
+format:
+  html:
+    theme: United
+    css: styles.css
+    toc: true
+    highlight-style: a11y
+    code-copy: true
+    code-overflow: wrap    
+    code-fold: show
+    code-line-numbers: true
+
+execute:
+  echo: true
+  message: false
+  warning: false
+  eval: true
+
+knitr:
+  opts_chunk: 
+    collapse: true
+    comment: "#>" 
+    fig.asp:  7/9
+    out.width: "95%"
+    fig.align: "center"
+    fig.show: "hold"
+    R.options:
+      options(scipen = 999) #- para quitar la notación científica  

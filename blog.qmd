@@ -1,0 +1,398 @@
+---
+title: "ANÁLISIS DE LOS ORÍGENES DEL ATRASO Y TRAYECTORIA ECONÓMICA POSTERIOR: INDIA"
+description: |
+  ANÁLISIS ECONÓMICO
+author: 
+- name: Sukhman Kaur (kaursukh@alumni.uv.es)
+date: 2023-01-13
+categories: [trabajo Big Data]
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+page-layout: full
+title-block-banner: true
+title-block-banner-color: "beige"
+toc: true
+toc-location: left
+toc-depth: 3
+smooth-scroll: true
+format: 
+  html:
+    backgroundcolor: "#f2e8d5"
+    embed-resources: true
+    link-external-newwindow: true
+    #css: ./assets/my_css_file.css   #- CUIDADO!!!!
+code-tools: true
+code-link: true
+
+---
+
+
+```{r}
+#| code-fold: true
+
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(gganimate)
+library(raster)
+library(sp)
+library(patchwork)
+library(ggrepel)
+library(grid)
+library(DT)
+library(knitr)
+library(plotly)
+library(ggplotify)
+
+
+```
+
+Repo utilizado para elaborar el trabajo en equipo para la asignatura "Programación y manejo de datos en la era del Big Data" de la Universitat de València durante el curso 2022-2023. La página web de la asignatura puede verse: [aqui](https://perezp44.github.io/intro-ds-22-23-web/.)
+
+## Introducción
+
+India es un país ubicado en Asia del Sur, ha sido una república federal desde 1950 compuesta por 28 estado y 8 territorios de la Unión con un sistema de democracia parlamentaria. Es el segundo país más poblado del y el séptimo entre los países más extensos del planeta, con una superficie de 3287263 km2. Las religiones principales son el hinduismo (79.8%), islam (14.2%), cristianismo (2.3%) y Sikhismo (1.7%). Su idioma oficial son el hindi y el inglés, sin embargo, es un país multilingüe. La capital es Nueva Delhi y su moneda rupias indias. Fue anexada por la Compañía Británica de las India Orientales desde principios del siglo XVIII y colonizada por el Reino Unido a mediados del siglo XIX, y se convirtió en nación independiente en 1947, cuando se dividió en dos dominios independientes, un Dominio de la India de mayoría hindú y un Dominio de Pakistán de mayoría musulmana, en medio de una pérdida de vidas a gran escala y una migración sin precedentes.
+
+## Datos
+
+Los datos son extraídos de dos fuentes, Banco Mundial y Madison Project Database. Extraer y modificar los datos para este trabajo fue una tarea bastante facil ya que se podia filtar en la propia pagina del Banco Mundial también.
+
+## Trabajos en los que me he basado
+
+En la asignatura "Crecimiento y desarrollo económico en la historia" como practica obligatoria teniamos que hacer un ensayo sobre un país de Asía, América Latina o África analizando sus diferentes trayectorias de crecimiento y desarrollo en el largo plazo, en mi caso elegí la India. Este trabajo esta basado en la mayoria sobre el ensayo que entregué.
+
+## Evolución
+
+### Pib per capita
+
+Para ver la evolución de la economía de India vamos a analizar la India antes, durante y después de la colonización.
+
+#### Imperio Mughal
+
+Antes de la colonización India estaba bajo el impero Mughal. Era un pais con territorii extenso, con muchos resursos naturales y mayoritariamente agrario. .La artesanía india fue muy popular en todo el mundo y obtuvo una gran demanda. Conocida por sus industrias artesanales en los campos de tejidos de algodón y seda, etc.
+
+#### British Indian Company
+
+Marcado por períodos de fuerte explotación. fue iniciada porcomerciantes que querían comerciar en Asia para obtener especias.Los británicos tomaron medidas que aseguraron el desarrollo y la promoción de los intereses de su país de origen.
+
+#### Republica Federal India
+
+En 1947, tras una larga lucha de manifestación contra los ingleses India consiguió la independencia. India tenía ya muchas infraestructuras como vías de tren, maquinaria de agricultura, pero no tenía fondos por lo que la mayoría se quedaron obsoletas.
+
+```{r}
+
+#| code-fold: true
+
+mpd2020 <- read_excel("mpd2020.xlsx", sheet = "Full data")
+mpd2020_1 <- mpd2020 %>% 
+  dplyr::select(countrycode, country, gdppc, year)%>%
+  filter(!is.na(gdppc))%>%
+  filter(country== "India")
+
+
+g1<- mpd2020_1 %>%
+  ggplot( aes(x=year, y=gdppc)) +
+  geom_line( color="grey") +
+  geom_point(shape=21, color="black", fill="#69b3a2", size=1) +
+  theme_solarized() +
+  ggtitle("PIB PER CÁPITA INDIA") +
+ scale_x_continuous("Año", breaks = seq(1600,2020,50),limits = c(1600, 2020)) + 
+  scale_y_continuous("PIB per cáptita", breaks = seq(500,8000,500),limits = c(500, 8000), labels = scales::dollar)
+
+
+mugh <- png::readPNG("mugh.png")
+mugh <- rasterGrob(mugh, width=unit(1,"npc"),height=unit(1,"npc"),hjust=NULL, vjust = unit(0.7, "npc"), interpolate=TRUE) 
+brit <- png::readPNG("brit.png")
+brit <- rasterGrob(brit, width=unit(1,"npc"), height=unit(1,"npc"),hjust=NULL, vjust = unit(0.7, "npc"), interpolate=TRUE) 
+ind <- png::readPNG("flag1.png")
+ind <- rasterGrob(ind, width=unit(1,"npc"), height=unit(1,"npc"), hjust=NULL, vjust = unit(0.8, "npc"), interpolate=TRUE) 
+
+g1 <-   ggplot(mpd2020_1, aes(x=year, y=gdppc)) +
+  annotation_custom(mugh, xmin = -Inf, xmax = 1760, ymin = 0, ymax = 13000)+
+  annotation_custom(brit, xmin = 1760, xmax = 1947, ymin = 0, ymax = 13000)+
+  annotation_custom(ind, xmin = 1947, xmax = +Inf, ymin = 0, ymax = 13000)+
+  geom_line( color="grey") +
+  geom_point(shape=21, color="black", fill="#69b3a2", size=1) +
+  theme_solarized() +
+  ggtitle("PIB PER CÁPITA INDIA") +
+  scale_x_continuous("Año", breaks = seq(1600,2020,50) ,limits = c(1600, 2020)) + 
+  scale_y_continuous("PIB per cáptita", labels = scales::dollar) +
+  labs(caption = "Elaboración propia con datos del Madison Project Database") +
+  theme(axis.text.x = element_text(angle=45)) 
+g1 
+
+```
+
+### Comparación con el reste del continente
+
+#### En mapa
+
+```{r}
+
+#| code-fold: true
+
+library(tmap)
+data(World) 
+world<- World %>%
+  rename(countrycode = iso_a3) %>%
+  dplyr::select(countrycode, continent)
+
+
+
+df1 <- inner_join(mpd2020, world) %>%
+  filter(continent == "Asia")
+df2 <- df1 %>% filter(year >= 1960) %>% filter(year <= 2020)
+
+mapa <- ggplot() +
+  geom_sf(data = df2, aes(geometry = geometry, fill = gdppc)) +
+  theme_void()   +
+  scale_fill_continuous(breaks = seq(10000, 150000, 10000),low="#c7cef2",high="#450b04") + 
+  transition_manual(year) +
+  labs(title = "PIB per cápita en Asia año {current_frame}",
+       caption = "Fuente: Elaboración propia con datos del Madison Project Database",
+       fill = "En dólares") +
+  guides(fill = guide_colorbar(barheight = unit(10, "cm")))
+mapa
+
+```
+
+![](gif.gif){fig-align="center"}
+
+#### Comparacion en grafica
+
+```{r}
+
+#| code-fold: true
+
+df4<- df1 %>% filter(year >= 1950)
+df5 <- df4 %>% mutate(paises = country)
+df6 <- df5 %>%
+  filter(country == 'India')
+g2 <- ggplot(df6, aes(x=year, y=gdppc)) +
+  geom_line(data=df5 %>% dplyr::select(-country), aes(group=paises), color="grey", size=0.5, alpha=1) +
+  geom_line( aes(fill = country),color = "#d9821e",  size=1.2 )+
+  scale_color_viridis_d() +
+  theme_solarized() +
+  theme(
+    plot.title = element_text(size=14),
+    panel.grid = element_blank()) +
+  labs(title = "PIB per cápita países asiaticos", 
+      subtitle= " $ a precios internacionales contantes
+de 2011",
+      caption = "Elaboración propia con datos del Madison Project Database") + 
+  ylab(NULL) + xlab(NULL) +
+  scale_y_continuous(breaks = seq(0, 25000, 5000), limits = c(0, 25000))
+
+plotly::ggplotly(g2)
+
+
+```
+## PIB per capita en tabla
+
+```{r}
+
+#| code-fold: true
+
+DT::datatable(df5)
+
+```
+
+
+## El problema poblacional
+
+#### Analfabetismo
+India tiene la mayor población analfabeta del mundo con casi 287 millones de personas que no saben leer o escribir. India es uno de los países más poblados del mundo donde la tasa de natalidad y la de mortalidad infantil son muy altas, con lo que podemos deducir que la sanidad no logra alcanzar a todos de manera igual. Con una población tan alta, también es uno de los países con mayor número de personas analfabetas, la mayoría siendo mujeres y niñas ya que un 40 % de mujeres son casados antes de los 15 años. Aunque la tasa de alfabetización ha bajado extremadamente desde la independización, sigue habiendo enorme diferencia entre estados, lo que supone un problema a la hora de desarrollarse como país.
+A continuación podemos observer las inscripciones escolares por educación.
+
+```{r}
+
+#| code-fold: true
+
+#primaria
+
+edu_1 <- read_excel("primario.xls")
+edu_1[, c(5:66)] <- sapply(edu_1[, c(5:66)], as.numeric)
+edu_1 <-edu_1%>%
+  pivot_longer(cols = c(5:66), values_to = "primaria", names_to = "year" )
+
+edu_1a <- edu_1%>%
+  filter(!is.na(primaria))%>%
+  dplyr::select(`Country Name`, primaria, year)%>%
+  filter(`Country Name`=="India")
+
+#secundaria
+
+edu_2 <- read_excel("secundario.xls")
+edu_2[, c(5:66)] <- sapply(edu_2[, c(5:66)], as.numeric)
+edu_2 <-edu_2%>%
+  pivot_longer(cols = c(5:66), values_to = "secundaria", names_to = "year" )
+
+edu_2a <- edu_2%>%
+  filter(!is.na(secundaria))%>%
+  dplyr::select(`Country Name`, secundaria, year)%>%
+  filter(`Country Name`=="India")
+
+#terciaria
+
+edu_3 <- read_excel("terciario.xls")
+edu_3[, c(5:66)] <- sapply(edu_3[, c(5:66)], as.numeric)
+edu_3 <-edu_3%>%
+  pivot_longer(cols = c(5:66), values_to = "terciaria", names_to = "year" )
+
+edu_3a <- edu_3%>%
+  filter(!is.na(terciaria))%>%
+  dplyr::select(`Country Name`, terciaria, year)%>%
+  filter(`Country Name`=="India")
+  
+df_edu3 <- edu_3a%>%
+  pivot_longer(cols = 3:3, values_to = "educacion")
+
+
+educa <- left_join(edu_1a, edu_2a, by = c("Country Name" = "Country Name", "year" = "year"))
+edu <- left_join(educa, edu_3a, by = c("Country Name" = "Country Name", "year"= "year"))
+
+
+df_ed <- edu%>%
+  gather(key="Educacion", value="Valor", -`Country Name`, -year)
+
+df_ed$year <- as.numeric(df_ed$year)
+
+g3 <- ggplot(df_ed, 
+             aes(x = year, y = Valor )) + geom_col(fill = "#e3aea3")+ scale_x_continuous("Año", breaks = seq(1970,2021,10) ,limits = c(1970, 2021)) + scale_y_continuous(("Inscripciones Escolares en porcentaje"), breaks=seq(0, 100, 50), limits = c(0, 100))
+
+g3 <- g3 + facet_grid(rows = vars(Educacion)) +
+  labs(title = "Inscripciones escolares de primaria, secundaria y terciaria en India",
+       subtitle = "(1970-2021)",
+       caption = "Datos provenientes del Banco Mundial",
+       x = "" )+theme_solarized() 
+plotly::ggplotly(g3)
+
+```
+
+#### Desigualdades y pobreza
+
+El sistema de castas que consiste de gradación social y divide la sociedad en cuatro grupos, que sigue presente en las zonas rurales y menos desarrolladas. el sistema de castas que consiste en gradación social y divide la sociedad en cuatro grupos, aunque con la Constitución de 1950 este fue abolido oficialmente, sigue
+existiendo la discriminación entre las zonas más pobres y rurales. Desde punto de vista económica, eso conlleva una gran pérdida del capital humano ya que la sociedad está tan divida que en algunos lugares en muy difícil para las personas obtener una educación y tener trabajo cualificado para un nivel de vida aceptable. 
+
+
+```{r}
+
+#| code-fold: true
+
+pobr <- read_excel("pobr.xls")
+pobr[, c(5:66)] <- sapply(pobr[, c(5:66)], as.numeric)
+pobr1 <-pobr%>%
+  pivot_longer(cols = c(5:66), values_to = "Tasa_de_pobreza", names_to = "year" )
+
+pobr_1 <- pobr1%>%
+   dplyr::rename(country_code = `Country Code`)
+
+df_pobreza <-pobr_1 %>% 
+  dplyr::select(country_code ,`Country Name`, year, Tasa_de_pobreza)%>%
+  filter(`Country Name`== c("India", "China", "Spain", "Estados Unidos", "Alemania"))
+ 
+
+
+df_pobreza$year <- as.numeric(df_pobreza$year)
+
+g4 <- ggplot(data = df_pobreza, aes(x = year, y= Tasa_de_pobreza, color = `Country Name`)) + geom_line()+
+  geom_point() + theme_solarized() +
+  theme(plot.subtitle = element_text(family = "serif", face = "italic"),
+        plot.title = element_text(family = "serif", face =  "italic")) +
+  labs(title = "Tasa de incidencia de la pobreza sobre la base de 1.90$ por día (2011 PPA)", 
+       subtitle = "Entre 1960 - 2020 " , 
+       caption = "Fuente: Banco Mundial")+ scale_x_continuous("Año", breaks = seq(1960, 2020, 10), limits= c(1960, 2020) )+ scale_y_continuous("Indice de tasa de pobreza")
+      
+
+plotly::ggplotly(g4)
+
+
+```
+## Esperanza de vida al nacer
+
+```{r}
+
+#| code-fold: true
+
+esp <- read_excel("esperana.xls")
+esp[, c(5:66)] <- sapply(esp[, c(5:66)], as.numeric)
+esp_1 <- esp%>%
+  pivot_longer(cols = c(5:66), values_to = "Esperanza", names_to = "year" )
+esp_2 <- esp_1%>%
+  filter(!is.na(Esperanza))%>%
+  dplyr::select(`Country Name`, Esperanza, year)%>%
+  filter(`Country Name`== c("India", "China", "Estados Unidos", "España"))%>%
+   dplyr::rename(Country = `Country Name`)
+
+esp_2$year <- as.numeric(esp_2$year)
+
+
+g5 <- ggplot(esp_2, 
+       aes(x = year, 
+           y = Esperanza,
+          color = Country )) +
+  geom_point(alpha = .4, 
+             size = 3) +
+  geom_smooth(se=FALSE, 
+              method = "lm", 
+              formula = y~poly(x,2), 
+              size = 1.5) +
+  labs(x = "Año",
+       title = "Esperanza de vida al nacer",
+       subtitle = "(1960-2020)",
+       y = "") + scale_x_continuous("Año", breaks = seq(1960, 2020, 10), limits= c(1960, 2020) )+
+  scale_color_brewer(palette = "Set1") +
+  theme_solarized()
+
+plotly::ggplotly(g5)
+
+```
+
+## Integración Internacional
+
+Por endeudamientos insostenibles y altos gastos, en los años 80 y 90, la economía india tenía problemas de balanza de pagos, que condujo al país a una crisis financiera. En 1991, por las altas deudas, India estaba al borde del incumplimiento de obligación de balanza de pagos, no veía manera de salir de esta espiral, cuanto más dinero recibía de otros países u organizaciones para sanear la economía más deudas tenía. Esta crisis marcó un punto de inflexión para la economía india, que sobrevivía de la agricultura principalmente con un analfabetismo altísimo y una esperanza de vida alrededor de 30 años y un sistema económico socialista donde el estado controlaba temas políticos, sociales, e institucionales. Ante la gravedad de la crisis de 1991, se comenzó a transformar hacia una economía con globalización, privatización y liberalización, que por apertura del mercado y desarrollo de tecnologías supuso un crecimiento económico.
+
+```{r}
+
+#| code-fold: true
+
+inver <- read_excel("inversion.xls")
+inver[, c(5:66)] <- sapply(inver[, c(5:66)], as.numeric)
+inv <- inver%>%
+  pivot_longer(cols = c(5:66), values_to = "Inversion", names_to = "year" )
+inv_1 <- inv%>%
+  filter(!is.na(Inversion))%>%
+  dplyr::select(`Country Name`, Inversion, year)%>%
+  filter(`Country Name`== c("India","España"))%>%
+   dplyr::rename(Country = `Country Name`)
+
+
+inv_1$year <- as.numeric(inv_1$year)
+
+
+g6 <- ggplot(data=inv_1, aes(y=Inversion, x=year, fill=Country)) +
+  geom_bar(stat="identity",position=position_dodge())+ geom_line(aes(color = Country))+ theme_solarized()+scale_x_continuous("Año", breaks = seq(1970, 2021,10), limits = c(1970,2021))+ scale_y_continuous("Inversiones extranjeras")+scale_fill_brewer(palette="Reds")
+
+plotly::ggplotly(g6)
+
+
+
+```
+
+## Conclusión
+
+Podemos concluir que India se ha mantenido un comportamiento mixto entre crecimiento y desarrollo económico durante los últimos 60 años. Tras independizarse se transformó en un país con una serie de políticas económicas estrictas, gobierno centralizado, mercado contralado sin posibilidad de entrada de empresas extranjeras. Una vez pasado la crisis de 1991, se inicia una transformación hacia una India más liberal frente al mercado y la economía, que muestra un camino de rápido acceso con tasa de crecimiento alrededor de 6% anual, lo cual se debe, principalmente, al alto consumo de la clase media, y a las inversiones privadas y públicas tanto nacional como extranjera. Así convirtiéndose en un país que crecía, aunque lentamente, pero con un crecimiento que le ubican en unos de los gigantes de la economía mundial.
+
+Sin embargo, sigue siendo un país que tiene una dependencia económica en los países occidentales. La mayoría de la población recae en la agricultura y con una población tan extensa
+es difícil desarrollarse, debe invertir más en la industria que en cambio generaría empleos especializados según cada sector, lo cual llevar a un aumento en el PIB per cápita y poder adquisitivo de la población.
+
+En cuanto a las expectativas del futuro, por un lado, con las políticas actuales, la clase media no puede evolucionar por la baja demanda que existe en industrias como la textil, y por otro
+lado, con la tecnología que se está desarrollando, puede aportar más que el doble. Pero tiene que afrontar muchos retos y solucionar su problemática como las desigualdades extremas,
+analfabetismo, terrorismo y las castas, son problemas que podían obligar a retroceder al país.
